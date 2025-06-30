@@ -76,6 +76,15 @@ body {
     overflow: hidden;
 }
 
+@media (min-width: 769px) {
+    .header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 32px;
+    }
+}
+
 .header::before {
     content: '';
     position: absolute;
@@ -92,26 +101,39 @@ body {
     z-index: 1;
 }
 
+.header-content {
+    flex: 1;
+}
+
 .header-content h1 {
     font-size: 2rem;
     font-weight: 800;
     color: var(--text-primary);
     margin-bottom: 8px;
     letter-spacing: -.025em;
+    line-height: 1.2;
 }
 
 .header-content p {
     color: var(--text-secondary);
     font-size: 1.1rem;
     font-weight: 500;
+    line-height: 1.4;
 }
 
 .header-actions {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     align-items: center;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+@media (min-width: 769px) {
+    .header-actions {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
 }
 
 .status-indicator {
@@ -121,13 +143,14 @@ body {
     font-size: .875rem;
     color: var(--text-secondary);
     background: var(--bg-tertiary);
-    padding: 8px 12px;
-    border-radius: 20px;
+    padding: 10px 16px;
+    border-radius: 25px;
     border: 1px solid var(--border-primary);
     box-shadow: var(--shadow-sm);
-    min-height: 36px;
+    min-height: 44px;
     transition: all .3s ease;
     user-select: none;
+    white-space: nowrap;
 }
 
 .status-indicator:hover {
@@ -161,45 +184,55 @@ body {
     display: flex;
     gap: 0;
     align-items: center;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-primary);
 }
 
 .control-group .theme-toggle {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
     border-right: none;
+    border: none;
     box-shadow: none;
 }
 
 .control-group .update-btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    border: none;
     box-shadow: none;
 }
 
 .update-btn {
-    padding: 10px 16px;
+    padding: 12px 20px;
     background: var(--accent-primary);
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     color: white;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all .3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: .875rem;
     min-height: 44px;
     box-shadow: var(--shadow-sm);
+    text-transform: none;
+    letter-spacing: 0;
 }
 
-.update-btn:hover {
+.update-btn:hover:not(:disabled) {
     background: var(--accent-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+.update-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
 }
 
 .update-btn:disabled {
@@ -207,15 +240,16 @@ body {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    opacity: 0.6;
 }
 
 .theme-toggle {
-    padding: 10px;
+    padding: 12px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all .3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -226,14 +260,20 @@ body {
 
 .theme-toggle:hover {
     background: var(--border-primary);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
 }
 
 .theme-toggle svg {
     width: 20px;
     height: 20px;
     fill: var(--text-primary);
+    transition: fill .3s ease;
 }
 
 @keyframes pulse {
@@ -948,7 +988,12 @@ body {
 
     .header {
         padding: 24px;
-        flex-direction: column
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .header-content {
+        text-align: center;
     }
 
     .header-content h1 {
@@ -962,19 +1007,26 @@ body {
     .header-actions {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
-        justify-content: center
+        gap: 16px;
+        justify-content: center;
     }
 
     .control-group {
         justify-content: center;
         width: 100%;
-        gap: 8px
+        gap: 0;
+        max-width: 300px;
+        margin: 0 auto;
+    overflow: hidden;
+    box-shadow: none;
+    border: none;
     }
 
     .status-indicator {
         justify-content: center;
-        width: 100%
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
     }
 
     .repo-grid {
@@ -1044,7 +1096,26 @@ body {
     }
 
     .header {
-        padding: 16px
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .header-content p {
+        font-size: 0.9rem;
+    }
+
+    .control-group {
+        max-width: 280px;
+    }
+
+    .status-indicator {
+        max-width: 280px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
     }
 
     .repo-stats {
@@ -1146,7 +1217,9 @@ body {
 .select-field:focus-visible,
 .input-field:focus-visible,
 .nav-item:focus-visible,
-.repo-card:focus-visible {
+.repo-card:focus-visible,
+.theme-toggle:focus-visible,
+.update-btn:focus-visible {
     outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
 }
