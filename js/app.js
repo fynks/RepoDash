@@ -1,4 +1,4 @@
-// Data storage
+        // Data storage
         let repositories = JSON.parse(localStorage.getItem('github-repos') || '[]');
         let repoData = JSON.parse(localStorage.getItem('github-repo-data') || '{}');
         let selectedRepo = localStorage.getItem('selected-repo') || null;
@@ -693,11 +693,12 @@
 
         // Update status time display
         function updateStatusTime() {
-            const lastUpdated = document.getElementById('last-updated');
+            const statusText = document.getElementById('status-text');
             if (lastUpdate) {
-                lastUpdated.textContent = `Last updated: ${getTimeAgo(parseInt(lastUpdate))}`;
+                const timeAgo = getTimeAgo(parseInt(lastUpdate));
+                statusText.textContent = `Last updated ${timeAgo}`;
             } else {
-                lastUpdated.textContent = '';
+                statusText.textContent = 'No data yet';
             }
         }
 
