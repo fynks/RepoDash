@@ -17,5 +17,13 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "id": "repodash",
+  "description": "Track your Github stars",
+  "start_url": "https://repodash.netlify.app/",
+  "dir": "ltr",
+  "scope": "https://repodash.netlify.app/",
+  "categories": [
+    "utilities"
+  ]
 }
