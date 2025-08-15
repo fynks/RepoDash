@@ -1,0 +1,19 @@
+{
+  "name": "@fynks/repodash",
+  "version": "2.0.0",
+  "description": "fynks",
+  "main": "index.html",
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "build": "npm run workbox",
+    "workbox": "workbox generateSW workbox-config.js"
+  },
+  "author": "fynks",
+  "dependencies": {
+    "workbox-cli": "^7.3.0"
+  }
+}

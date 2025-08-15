@@ -14,6 +14,8 @@
     <meta name="theme-color" content="#0f172a" />
     <link rel="stylesheet" href="css/styles-min.css">
     <script src="js/app-min.js" defer></script>
+    <link rel="preconnect" href="https://api.github.com">
+    <link rel="rel=dns-prefetch" href="https://api.github.com" crossorigin>
     <meta name="description"
         content="Track and manage your GitHub repositories with ease. Professional repository tracking and analytics.">
 </head>
@@ -232,6 +234,7 @@
         </div>
     </nav>
 
+<script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js');});}</script>
 </body>
 
 </html>
