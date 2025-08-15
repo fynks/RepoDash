@@ -53,6 +53,7 @@ body {
     min-height: 100vh;
     line-height: 1.6;
     transition: background-color .3s ease, color .3s ease;
+    overflow-x: hidden;
 }
 
 .container {
@@ -298,6 +299,28 @@ body {
     }
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 @keyframes starGlow {
     0% {
         filter: drop-shadow(0 2px 4px rgba(251, 191, 36, .3))
@@ -334,6 +357,20 @@ body {
     margin-bottom: 32px;
 }
 
+@media (min-width: 768px) {
+    .repo-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+    }
+}
+
+.repo-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .repo-name {
     font-size: 1.5rem;
     font-weight: 700;
@@ -361,6 +398,17 @@ body {
     min-height: 44px;
     display: flex;
     align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .repo-link {
+        align-self: stretch;
+        justify-content: center;
+        width: 100%;
+    }
 }
 
 .repo-link:hover {
@@ -383,6 +431,17 @@ body {
     border: 1px solid var(--border-primary);
     position: relative;
     overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .star-count {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+        font-size: 1.75rem;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
 }
 
 .star-count::before {
@@ -432,6 +491,19 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 16px;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .repo-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .repo-stats {
+        grid-template-columns: 1fr;
+    }
 }
 
 .stat-item {
@@ -477,6 +549,7 @@ body {
     box-shadow: var(--shadow-sm);
     position: relative;
     overflow: hidden;
+    animation: fadeIn 0.5s ease forwards;
 }
 
 .repo-card:hover {
@@ -563,6 +636,36 @@ body {
     font-weight: 500;
 }
 
+.repo-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 100%;
+}
+
+.topic-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topic-tag:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
 .settings-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
@@ -572,6 +675,7 @@ body {
     box-shadow: var(--shadow-sm);
     position: relative;
     overflow: hidden;
+    animation: slideIn 0.5s ease forwards;
 }
 
 .settings-section h3 {
@@ -759,6 +863,13 @@ body {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
 }
 
+.import-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .repo-list {
     list-style: none;
 }
@@ -871,21 +982,29 @@ body {
 
 .loading {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 60px 20px;
     color: var(--text-secondary);
     text-align: center;
+    gap: 16px;
+}
+
+.loading.inline {
+    flex-direction: row;
+    padding: 40px 20px;
+    gap: 12px;
 }
 
 .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border-primary);
-    border-top: 2px solid var(--accent-primary);
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border-primary);
+    border-top: 3px solid var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .notification {
@@ -1055,12 +1174,6 @@ body {
         gap: 12px
     }
 
-    .star-count {
-        font-size: 1.75rem;
-        padding: 20px;
-        margin-bottom: 24px
-    }
-
     .star-main {
         font-size: 1.75rem
     }
@@ -1120,12 +1233,6 @@ body {
 
     .repo-stats {
         grid-template-columns: 1fr
-    }
-
-    .star-count {
-        flex-direction: column;
-        text-align: center;
-        gap: 12px
     }
 
     .nav-item {

@@ -164,7 +164,14 @@
 
             try {
                 const response = await fetch(`https://api.github.com/repos/${repoPath}`);
-                if (!response.ok) throw new Error('Repository not found');
+                
+                if (response.status === 404) {
+                    throw new Error('Repository not found or is private');
+                } else if (response.status === 403) {
+                    throw new Error('API rate limit exceeded. Please try again later.');
+                } else if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
                 
                 const data = await response.json();
                 return {
@@ -177,10 +184,13 @@
                     description: data.description,
                     updated_at: data.updated_at,
                     created_at: data.created_at,
-                    url: data.html_url
+                    url: data.html_url,
+                    topics: data.topics || [],
+                    license: data.license ? data.license.name : null,
+                    default_branch: data.default_branch
                 };
             } catch (error) {
-                console.error('Error fetching repo data:', error);
+                handleError(error, 'fetchRepoData');
                 return null;
             }
         }
@@ -218,22 +228,41 @@
                 homeDiv.innerHTML = `
                     <div class="loading">
                         <div class="spinner"></div>
-                        Select a repository to track
+                        <div>Select a repository to track</div>
                     </div>
                 `;
                 return;
             }
 
+            const topics = data.topics && data.topics.length > 0 
+                ? `<div class="repo-topics">
+                     ${data.topics.slice(0, 5).map(topic => `<span class="topic-tag">${topic}</span>`).join('')}
+                   </div>` 
+                : '';
+
+            const license = data.license 
+                ? `<div class="stat-item">
+                     <div class="stat-value">${data.license}</div>
+                     <div class="stat-label">License</div>
+                   </div>`
+                : '';
+
             homeDiv.innerHTML = `
                 <div class="repo-header">
-                    <div>
+                    <div class="repo-info">
                         <div class="repo-name">${data.full_name}</div>
                         <div class="repo-description">${data.description || 'No description available'}</div>
+                        ${topics}
                     </div>
-                    <a href="${data.url}" target="_blank" class="repo-link">View on GitHub →</a>
+                    <a href="${data.url}" target="_blank" class="repo-link" rel="noopener noreferrer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+                        </svg>
+                        View on GitHub
+                    </a>
                 </div>
                 <div class="star-count">
-                    <svg class="star-icon" viewBox="0 0 24 24">
+                    <svg class="star-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                     <div class="star-number">
@@ -258,6 +287,10 @@
                         <div class="stat-value">${new Date(data.updated_at).toLocaleDateString()}</div>
                         <div class="stat-label">Last Updated</div>
                     </div>
+                    ${data.license ? `<div class="stat-item">
+                        <div class="stat-value">${data.license}</div>
+                        <div class="stat-label">License</div>
+                    </div>` : ''}
                 </div>
             `;
         }
@@ -365,17 +398,21 @@
             
             if (!repoUrl) {
                 showNotification('Please enter a repository URL', 'error');
+                input.focus();
                 return;
             }
 
-            const repoPath = extractRepoPath(repoUrl);
-            if (!repoPath) {
-                showNotification('Invalid repository URL format', 'error');
+            const validation = validateRepoUrl(repoUrl);
+            if (!validation.valid) {
+                showNotification(validation.error, 'error');
+                input.focus();
                 return;
             }
 
+            const repoPath = validation.repoPath;
             if (repositories.includes(repoPath)) {
                 showNotification('Repository already added', 'warning');
+                input.focus();
                 return;
             }
 
@@ -447,13 +484,19 @@
             }
 
             // Fetch fresh data
-            const data = await fetchRepoData(selectedRepo);
-            if (data) {
-                updateCache({ [selectedRepo]: data });
-                updateHomeTab(data);
-                updateStatus('Updated');
-            } else {
-                showNotification('Failed to load repository data', 'error');
+            try {
+                const data = await fetchRepoData(selectedRepo);
+                if (data) {
+                    updateCache({ [selectedRepo]: data });
+                    updateHomeTab(data);
+                    updateStatus('Updated');
+                } else {
+                    updateHomeTab(null);
+                    updateStatus('Error', 'error');
+                }
+            } catch (error) {
+                handleError(error, 'loadRepoData');
+                updateHomeTab(null);
                 updateStatus('Error', 'error');
             }
         }
@@ -463,7 +506,7 @@
             reposGrid.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    Loading repositories...
+                    <div>Loading repositories...</div>
                 </div>
             `;
 
@@ -482,8 +525,13 @@
                     return { [repo]: repoData[repo] };
                 }
                 
-                const data = await fetchRepoData(repo);
-                return data ? { [repo]: data } : {};
+                try {
+                    const data = await fetchRepoData(repo);
+                    return data ? { [repo]: data } : {};
+                } catch (error) {
+                    console.error(`Failed to load ${repo}:`, error);
+                    return {};
+                }
             });
 
             try {
@@ -492,10 +540,14 @@
                 updateCache(newData);
                 updateReposTab(repoData);
                 updateStatus('Updated');
+                
+                const failedCount = repositories.length - Object.keys(newData).length;
+                if (failedCount > 0) {
+                    showNotification(`Loaded with ${failedCount} errors`, 'warning');
+                }
             } catch (error) {
-                showNotification('Failed to load some repositories', 'error');
+                handleError(error, 'loadAllReposData');
                 updateReposTab(repoData);
-                updateStatus('Error', 'error');
             }
         }
 
@@ -607,26 +659,56 @@
         }
 
         function clearCache() {
-            if (confirm('Are you sure you want to clear all cached data? This will force a refresh of all repositories.')) {
+            const cacheSize = Object.keys(repoData).length;
+            const confirmMessage = cacheSize > 0 
+                ? `Clear cache for ${cacheSize} repositories? This will force a refresh of all data.`
+                : 'No cached data to clear.';
+                
+            if (cacheSize === 0) {
+                showNotification('No cached data to clear', 'warning');
+                return;
+            }
+            
+            if (confirm(confirmMessage)) {
                 localStorage.removeItem('github-repo-data');
                 localStorage.removeItem('last-update');
                 repoData = {};
                 lastUpdate = null;
                 showNotification('Cache cleared successfully', 'success');
                 updateStatusTime();
+                
+                // Refresh current view
+                const activeTab = document.querySelector('.nav-item.active .nav-label').textContent.toLowerCase();
+                if (activeTab === 'home' && selectedRepo) {
+                    loadRepoData();
+                } else if (activeTab === 'repositories') {
+                    loadAllReposData();
+                }
             }
         }
 
         // Utility functions
-        function showNotification(message, type = 'success') {
+        function showNotification(message, type = 'success', duration = 3000) {
             const notification = document.getElementById('notification');
-            notification.textContent = message;
+            
+            // Clear any existing timeout
+            if (notification.timeout) {
+                clearTimeout(notification.timeout);
+            }
+            
+            // Handle multiline messages
+            if (message.includes('\n')) {
+                notification.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${message}</pre>`;
+            } else {
+                notification.textContent = message;
+            }
+            
             notification.className = `notification ${type}`;
             notification.classList.add('show');
 
-            setTimeout(() => {
+            notification.timeout = setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, duration);
         }
 
         function loadRepositories() {
@@ -640,6 +722,10 @@
         document.addEventListener('keydown', function(e) {
             // Skip if user is typing in an input field
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                // Allow Escape to blur input fields
+                if (e.key === 'Escape') {
+                    e.target.blur();
+                }
                 return;
             }
 
@@ -665,6 +751,20 @@
                         e.preventDefault();
                         toggleTheme();
                         break;
+                    case 'e':
+                        e.preventDefault();
+                        if (repositories.length > 0) {
+                            exportRepositories();
+                        }
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        document.getElementById('import-file').click();
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        showKeyboardShortcuts();
+                        break;
                 }
             }
             
@@ -681,6 +781,16 @@
                 e.preventDefault();
                 navItems[currentIndex + 1].click();
                 navItems[currentIndex + 1].focus();
+            }
+
+            // Quick actions
+            if (e.key === '/') {
+                e.preventDefault();
+                const repoInput = document.getElementById('repo-input');
+                if (repoInput) {
+                    switchTab('settings');
+                    setTimeout(() => repoInput.focus(), 100);
+                }
             }
         });
 
@@ -742,4 +852,187 @@
             navigator.serviceWorker.register('data:text/javascript,').catch(() => {
                 // Service worker registration failed, but app still works
             });
+        }
+
+        // Import/Export functionality
+        function exportRepositories() {
+            try {
+                const exportData = {
+                    repositories: repositories,
+                    repoData: repoData,
+                    settings: settings,
+                    exportDate: new Date().toISOString(),
+                    version: '1.0.0'
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `repodash-export-${new Date().toISOString().split('T')[0]}.json`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification('Data exported successfully!', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showNotification('Failed to export data', 'error');
+            }
+        }
+
+        function importRepositories(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+                showNotification('Please select a valid JSON file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // Validate import data structure
+                    if (!importData.repositories || !Array.isArray(importData.repositories)) {
+                        throw new Error('Invalid file format: missing repositories array');
+                    }
+
+                    // Show confirmation dialog
+                    const mergeMode = confirm(
+                        `Import ${importData.repositories.length} repositories?\n\n` +
+                        'Click OK to merge with existing data, or Cancel to replace all data.'
+                    );
+
+                    if (mergeMode === null) return; // User cancelled
+
+                    // Import repositories
+                    const importedRepos = importData.repositories.filter(repo => typeof repo === 'string' && repo.trim());
+                    
+                    if (mergeMode) {
+                        // Merge mode: add new repositories without duplicates
+                        const newRepos = importedRepos.filter(repo => !repositories.includes(repo));
+                        repositories.push(...newRepos);
+                        
+                        if (importData.repoData) {
+                            Object.assign(repoData, importData.repoData);
+                        }
+                        
+                        showNotification(`Imported ${newRepos.length} new repositories`, 'success');
+                    } else {
+                        // Replace mode: clear existing and import new
+                        repositories = [...importedRepos];
+                        repoData = importData.repoData || {};
+                        
+                        showNotification(`Replaced with ${importedRepos.length} repositories`, 'success');
+                    }
+
+                    // Import settings if available
+                    if (importData.settings) {
+                        Object.assign(settings, importData.settings);
+                        saveSettings();
+                        loadSettings();
+                    }
+
+                    // Save and update UI
+                    localStorage.setItem('github-repos', JSON.stringify(repositories));
+                    localStorage.setItem('github-repo-data', JSON.stringify(repoData));
+                    
+                    // Update selected repo
+                    if (repositories.length > 0) {
+                        selectedRepo = settings.defaultRepo && repositories.includes(settings.defaultRepo) 
+                            ? settings.defaultRepo 
+                            : repositories[0];
+                        localStorage.setItem('selected-repo', selectedRepo);
+                    } else {
+                        selectedRepo = null;
+                        localStorage.removeItem('selected-repo');
+                    }
+
+                    // Refresh UI
+                    updateSettingsList();
+                    updateDefaultRepoOptions();
+                    loadRepoData();
+                    
+                    // Clear file input
+                    event.target.value = '';
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showNotification(`Import failed: ${error.message}`, 'error');
+                    event.target.value = '';
+                }
+            };
+
+            reader.onerror = function() {
+                showNotification('Failed to read file', 'error');
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Enhanced error handling
+        function handleError(error, context = '') {
+            console.error(`Error in ${context}:`, error);
+            
+            let message = 'An unexpected error occurred';
+            if (error.message.includes('fetch')) {
+                message = 'Network error - please check your connection';
+            } else if (error.message.includes('not found')) {
+                message = 'Repository not found or access denied';
+            } else if (error.message.includes('rate limit')) {
+                message = 'GitHub API rate limit exceeded - please try again later';
+            }
+            
+            showNotification(message, 'error');
+            updateStatus('Error', 'error');
+        }
+
+        // Enhanced notification system with better UX
+        function showNotification(message, type = 'success', duration = 3000) {
+            const notification = document.getElementById('notification');
+            
+            // Clear any existing timeout
+            if (notification.timeout) {
+                clearTimeout(notification.timeout);
+            }
+            
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+
+            // Add progress bar for longer notifications
+            if (duration > 2000) {
+                notification.style.position = 'relative';
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.classList.remove('show')" 
+                                style="background: none; border: none; color: inherit; cursor: pointer; padding: 4px;">✕</button>
+                    </div>
+                `;
+            }
+
+            notification.timeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Improved repository validation
+        function validateRepoUrl(url) {
+            const repoPath = extractRepoPath(url);
+            if (!repoPath) return { valid: false, error: 'Invalid repository URL format' };
+            
+            const parts = repoPath.split('/');
+            if (parts.length !== 2) return { valid: false, error: 'Repository must be in format "owner/repo"' };
+            
+            const [owner, repo] = parts;
+            if (!owner.trim() || !repo.trim()) return { valid: false, error: 'Owner and repository name cannot be empty' };
+            
+            return { valid: true, repoPath };
         }
