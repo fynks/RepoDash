@@ -72,7 +72,6 @@
             settings.theme = newTheme;
             saveSettings();
             updateThemeIcon(newTheme);
-            showNotification(`Switched to ${newTheme} theme`, 'success');
         }
 
         // Update theme icon
@@ -92,18 +91,18 @@
         // Update status indicator
         function updateStatus(status, type = 'ready') {
             const statusText = document.getElementById('status-text');
-            const statusDot = document.querySelector('.status-dot');
+            const statusBadge = document.querySelector('.status-badge');
             const updateBtn = document.getElementById('update-btn');
 
             statusText.textContent = status;
-            statusDot.className = 'status-dot';
+            statusBadge.className = 'status-badge';
             updateBtn.disabled = false;
 
             if (type === 'updating') {
-                statusDot.classList.add('updating');
+                statusBadge.classList.add('updating');
                 updateBtn.disabled = true;
             } else if (type === 'error') {
-                statusDot.classList.add('error');
+                statusBadge.classList.add('error');
             }
         }
 
@@ -234,25 +233,11 @@
                 return;
             }
 
-            const topics = data.topics && data.topics.length > 0 
-                ? `<div class="repo-topics">
-                     ${data.topics.slice(0, 5).map(topic => `<span class="topic-tag">${topic}</span>`).join('')}
-                   </div>` 
-                : '';
-
-            const license = data.license 
-                ? `<div class="stat-item">
-                     <div class="stat-value">${data.license}</div>
-                     <div class="stat-label">License</div>
-                   </div>`
-                : '';
-
             homeDiv.innerHTML = `
                 <div class="repo-header">
                     <div class="repo-info">
                         <div class="repo-name">${data.full_name}</div>
                         <div class="repo-description">${data.description || 'No description available'}</div>
-                        ${topics}
                     </div>
                     <a href="${data.url}" target="_blank" class="repo-link" rel="noopener noreferrer">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -287,10 +272,6 @@
                         <div class="stat-value">${new Date(data.updated_at).toLocaleDateString()}</div>
                         <div class="stat-label">Last Updated</div>
                     </div>
-                    ${data.license ? `<div class="stat-item">
-                        <div class="stat-value">${data.license}</div>
-                        <div class="stat-label">License</div>
-                    </div>` : ''}
                 </div>
             `;
         }
@@ -397,21 +378,18 @@
             const repoUrl = input.value.trim();
             
             if (!repoUrl) {
-                showNotification('Please enter a repository URL', 'error');
                 input.focus();
                 return;
             }
 
             const validation = validateRepoUrl(repoUrl);
             if (!validation.valid) {
-                showNotification(validation.error, 'error');
                 input.focus();
                 return;
             }
 
             const repoPath = validation.repoPath;
             if (repositories.includes(repoPath)) {
-                showNotification('Repository already added', 'warning');
                 input.focus();
                 return;
             }
@@ -431,7 +409,6 @@
             input.value = '';
             updateSettingsList();
             updateDefaultRepoOptions();
-            showNotification('Repository added successfully!', 'success');
 
             // Load data for the new repository
             loadRepoData();
@@ -453,7 +430,6 @@
 
             updateSettingsList();
             updateDefaultRepoOptions();
-            showNotification('Repository removed');
 
             // Reload data
             loadRepoData();
@@ -542,9 +518,6 @@
                 updateStatus('Updated');
                 
                 const failedCount = repositories.length - Object.keys(newData).length;
-                if (failedCount > 0) {
-                    showNotification(`Loaded with ${failedCount} errors`, 'warning');
-                }
             } catch (error) {
                 handleError(error, 'loadAllReposData');
                 updateReposTab(repoData);
@@ -567,8 +540,6 @@
             } else if (activeTab === 'repositories') {
                 await loadAllReposData();
             }
-
-            showNotification('Data refreshed successfully!', 'success');
         }
 
         // Settings functions
@@ -579,7 +550,6 @@
             toggle.classList.toggle('active', settings.compactView);
             toggle.setAttribute('aria-checked', settings.compactView.toString());
             saveSettings();
-            showNotification(`Compact view ${settings.compactView ? 'enabled' : 'disabled'}`, 'success');
             
             // Refresh current view if on repositories tab
             const activeTab = document.querySelector('.nav-item.active .nav-label').textContent.toLowerCase();
@@ -594,7 +564,6 @@
             toggle.classList.toggle('active', settings.showDescriptions);
             toggle.setAttribute('aria-checked', settings.showDescriptions.toString());
             saveSettings();
-            showNotification(`Descriptions ${settings.showDescriptions ? 'shown' : 'hidden'}`, 'success');
             
             // Refresh repositories view
             const activeTab = document.querySelector('.nav-item.active .nav-label').textContent.toLowerCase();
@@ -607,7 +576,6 @@
             const select = document.getElementById('default-sort');
             settings.defaultSort = select.value;
             saveSettings();
-            showNotification('Default sort updated', 'success');
             
             // Refresh repositories view
             const activeTab = document.querySelector('.nav-item.active .nav-label').textContent.toLowerCase();
@@ -625,9 +593,6 @@
                 selectedRepo = select.value;
                 localStorage.setItem('selected-repo', selectedRepo);
                 loadRepoData();
-                showNotification(`Default repository set to ${select.value}`, 'success');
-            } else {
-                showNotification('Default repository cleared - will use first repository', 'success');
             }
         }
 
@@ -665,7 +630,6 @@
                 : 'No cached data to clear.';
                 
             if (cacheSize === 0) {
-                showNotification('No cached data to clear', 'warning');
                 return;
             }
             
@@ -674,7 +638,6 @@
                 localStorage.removeItem('last-update');
                 repoData = {};
                 lastUpdate = null;
-                showNotification('Cache cleared successfully', 'success');
                 updateStatusTime();
                 
                 // Refresh current view
@@ -685,30 +648,6 @@
                     loadAllReposData();
                 }
             }
-        }
-
-        // Utility functions
-        function showNotification(message, type = 'success', duration = 3000) {
-            const notification = document.getElementById('notification');
-            
-            // Clear any existing timeout
-            if (notification.timeout) {
-                clearTimeout(notification.timeout);
-            }
-            
-            // Handle multiline messages
-            if (message.includes('\n')) {
-                notification.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${message}</pre>`;
-            } else {
-                notification.textContent = message;
-            }
-            
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-
-            notification.timeout = setTimeout(() => {
-                notification.classList.remove('show');
-            }, duration);
         }
 
         function loadRepositories() {
