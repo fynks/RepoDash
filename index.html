@@ -12,54 +12,62 @@
     <meta name="apple-mobile-web-app-title" content="RepoDash" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0f172a" />
-    <link rel="stylesheet" href="css/styles-min.css">
-    <script src="js/app-min.js" defer></script>
-    <link rel="preconnect" href="https://api.github.com">
-    <link rel="rel=dns-prefetch" href="https://api.github.com" crossorigin>
+    <link rel="stylesheet" href="css/styles-min.css"> <!-- Link to the improved CSS -->
+    <script src="js/app-min.js" defer></script> <!-- Link to the unchanged JS -->
+    <link rel="preconnect" href="https://api.github.com ">
+    <link rel="dns-prefetch" href="https://api.github.com " crossorigin> <!-- Fixed rel attribute -->
     <meta name="description"
         content="Track and manage your GitHub repositories with ease. Professional repository tracking and analytics.">
 </head>
 
 <body>
     <div class="container">
+        <!-- Improved Header Structure -->
         <header class="header">
             <div class="header-brand">
+                <!-- Semantic h1 for the brand title -->
                 <h1 class="brand-title">RepoDash</h1>
             </div>
-
             <div class="header-status">
+                <!-- Status indicator with ARIA attributes -->
                 <div id="status-indicator" class="status-badge" aria-live="polite">
-                    <div class="status-icon">
+                    <div class="status-icon" aria-hidden="true">
+                        <!-- Simplified status icon -->
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <circle cx="12" cy="12" r="10" />
                         </svg>
                     </div>
+                    <!-- Status text updated by JS -->
                     <span id="status-text" class="status-text">Ready</span>
                 </div>
             </div>
-
             <div class="header-actions">
+                <!-- Theme toggle button -->
                 <button id="theme-toggle" class="action-btn theme-btn" onclick="toggleTheme()" aria-label="Toggle theme"
                     title="Toggle Dark/Light Theme">
-                    <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z" />
+                    <!-- Theme icon updated by JS -->
+                    <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                        aria-hidden="true">
+                        <!-- Icon path will be dynamically set -->
                     </svg>
                 </button>
-
+                <!-- Refresh data button -->
                 <button id="update-btn" class="action-btn primary-btn" onclick="forceRefresh()"
                     aria-label="Refresh data" title="Refresh Repository Data">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <!-- Refresh icon -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path
                             d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                     </svg>
+                    <!-- Text hidden on small screens via CSS -->
                     <span class="btn-text">Refresh</span>
                 </button>
             </div>
         </header>
 
-        <!-- Home Tab -->
+        <!-- Main Content Area -->
         <main>
+            <!-- Home Tab Content -->
             <div id="home-tab" class="tab-content active" role="tabpanel" aria-labelledby="home-nav" tabindex="0">
                 <div id="main-repo" class="main-repo-card">
                     <div id="home-loading" class="loading">
@@ -69,7 +77,7 @@
                 </div>
             </div>
 
-            <!-- Repositories Tab -->
+            <!-- Repositories Tab Content -->
             <div id="repos-tab" class="tab-content" role="tabpanel" aria-labelledby="repos-nav" tabindex="0">
                 <div id="repos-grid" class="repo-grid" role="grid" aria-label="Repository list">
                     <div class="loading">
@@ -79,14 +87,15 @@
                 </div>
             </div>
 
-            <!-- Settings Tab -->
+            <!-- Settings Tab Content -->
             <div id="settings-tab" class="tab-content" role="tabpanel" aria-labelledby="settings-nav" tabindex="0">
+                 <!-- Add Repository Section -->
                 <div class="settings-section">
                     <h3>Add Repository</h3>
                     <form onsubmit="event.preventDefault(); addRepository();">
                         <div class="input-group">
                             <input type="text" id="repo-input" class="input-field"
-                                placeholder="e.g., facebook/react or https://github.com/facebook/react"
+                                placeholder="e.g., facebook/react or https://github.com/facebook/react "
                                 aria-label="Repository URL" required>
                             <button type="submit" class="btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -98,9 +107,10 @@
                     </form>
                 </div>
 
+                <!-- Application Settings Section -->
                 <div class="settings-section">
                     <h3>Application Settings</h3>
-
+                    <!-- Compact View Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Compact View</div>
@@ -109,7 +119,7 @@
                         <button class="toggle-switch" id="compact-view-toggle" onclick="toggleCompactView()"
                             role="switch" aria-checked="false" aria-label="Toggle compact view"></button>
                     </div>
-
+                    <!-- Show Descriptions Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Show Descriptions</div>
@@ -120,7 +130,7 @@
                             onclick="toggleShowDescriptions()" role="switch" aria-checked="true"
                             aria-label="Toggle repository descriptions"></button>
                     </div>
-
+                     <!-- Default Sort Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Default Sort</div>
@@ -134,7 +144,7 @@
                             <option value="created">Recently Created</option>
                         </select>
                     </div>
-
+                    <!-- Default Home Repository Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Default Home Repository</div>
@@ -147,9 +157,10 @@
                     </div>
                 </div>
 
+                <!-- Data Management Section -->
                 <div class="settings-section">
                     <h3>Data Management</h3>
-
+                    <!-- Export Data Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Export Repositories</div>
@@ -163,7 +174,7 @@
                             Export Data
                         </button>
                     </div>
-
+                    <!-- Import Data Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Import Repositories</div>
@@ -181,7 +192,7 @@
                             </button>
                         </div>
                     </div>
-
+                    <!-- Clear Cache Setting -->
                     <div class="settings-row">
                         <div class="setting-info">
                             <div class="setting-title">Clear Cache</div>
@@ -197,6 +208,7 @@
                     </div>
                 </div>
 
+                <!-- Managed Repositories Section -->
                 <div class="settings-section">
                     <h3>Managed Repositories</h3>
                     <ul id="repo-list" class="repo-list" role="list" aria-label="List of managed repositories"></ul>
@@ -208,6 +220,7 @@
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" role="tablist" aria-label="Main navigation">
         <div class="nav-container">
+            <!-- Home Nav Item -->
             <button class="nav-item active" onclick="switchTab('home')" role="tab" aria-selected="true" tabindex="0"
                 id="home-nav">
                 <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -215,6 +228,7 @@
                 </svg>
                 <span class="nav-label">Home</span>
             </button>
+            <!-- Repositories Nav Item -->
             <button class="nav-item" onclick="switchTab('repos')" role="tab" aria-selected="false" tabindex="-1"
                 id="repos-nav">
                 <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -223,6 +237,7 @@
                 </svg>
                 <span class="nav-label">Repositories</span>
             </button>
+             <!-- Settings Nav Item -->
             <button class="nav-item" onclick="switchTab('settings')" role="tab" aria-selected="false" tabindex="-1"
                 id="settings-nav">
                 <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -234,7 +249,8 @@
         </div>
     </nav>
 
-<script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js');});}</script>
+    <!-- Service Worker Registration -->
+    <script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js');});}</script>
 </body>
 
 </html>
