@@ -25,6 +25,6 @@ module.exports = {
       },
     },
   ],
-  swDest: "./sw.js",
+  swDest: "dist/sw.js",
   sourcemap: false
 };
